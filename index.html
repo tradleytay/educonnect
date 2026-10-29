@@ -1,9 +1,234 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#17652e"><meta name="description" content="Edu Connect academic tutorials and student application guidance"><title>Edu Connect | Creating Bright Futures, Together</title><link rel="stylesheet" href="styles.css"></head><body>
-<header class="topbar"><a class="brand" href="#home" onclick="showPublic()"><img class="public-brand-logo" src="assets/edu-connect-group-logo.jpeg" alt="Edu Connect Group logo"><span><b>EDU CONNECT</b><small>CREATING BRIGHT FUTURES, TOGETHER</small></span></a><nav class="public-nav"><a href="academy.html">Academy</a><a href="consultancy.html">Consultancy</a><a href="about.html">About</a><a href="contact.html">Contact</a></nav><div class="top-actions"><button class="btn light" onclick="openSignIn()">Sign in</button><button class="btn primary" onclick="openEnquiry()">Get started</button></div></header>
-<div id="publicView"><main id="home"><section class="hero"><div class="hero-copy"><div class="eyebrow">YOUR NEXT STEP STARTS HERE</div><h1>Learn with confidence.<br><span>Move forward</span> together.</h1><p>Friendly academic support and practical guidance for your university journey. One place to learn, plan and keep your next steps organized.</p><div class="actions"><a class="btn primary" href="#academy">Explore Academy →</a><a class="btn gold" href="#consultancy">Get application support →</a></div><div class="proof"><span>✓ Student-focused support</span><span>✓ Clear steps and guidance</span></div></div><div class="hero-card"><div class="hero-logo">✦</div><span class="hero-card-label">EDU CONNECT</span><h2>Creating bright futures, together.</h2><p>Learning and guidance, connected.</p><div class="floating f1"><b>Academy</b><small>Small groups. Real progress.</small></div><div class="floating f2"><b>Consultancy</b><small>Guidance one step at a time.</small></div></div></section>
-<section class="section" id="academy"><div class="section-title"><div class="eyebrow">OUR SERVICES</div><h2>Two services. One connected journey.</h2><p>Choose the kind of support you need. Your student portal keeps it all together.</p></div><div class="service-grid"><article class="service-card"><img class="service-logo" src="assets/edu-connect-academy-logo.jpeg" alt="Edu Connect Academy logo"><div class="tag">EDU CONNECT ACADEMY</div><h3>Learn with confidence</h3><p>Join supportive tutorial groups, strengthen understanding, and build confidence with guided learning.</p><ul><li>Small group tutorials</li><li>Session schedules and attendance</li><li>Learning resources and progress notes</li></ul><button class="linkbtn" onclick="openEnquiry('Academy')">Explore learning support →</button></article><article class="service-card" id="consultancy"><img class="service-logo" src="assets/edu-connect-consultancy-logo.jpeg" alt="Edu Connect Consultancy logo"><div class="tag">EDU CONNECT CONSULTANCY</div><h3>Plan your next step</h3><p>Get organized guidance with university applications, permit preparation, documents, and deadlines.</p><ul><li>University and course applications</li><li>Permit application preparation support</li><li>Checklists, appointments, and case updates</li></ul><button class="linkbtn" onclick="openEnquiry('Consultancy')">Talk to our team →</button></article></div></section>
-<section class="section tinted" id="how"><div class="section-title"><div class="eyebrow">HOW IT WORKS</div><h2>A clear path from first question to next step.</h2><p>We keep the process personal, organized, and easy to follow.</p></div><div class="steps"><article><b>01 · CONNECT</b><h3>Tell us what you need</h3><p>Choose learning support or application guidance and share a few details.</p></article><article><b>02 · PLAN</b><h3>Get a practical plan</h3><p>Understand the next steps, documents, schedule, and support options.</p></article><article><b>03 · PROGRESS</b><h3>Keep moving forward</h3><p>Track sessions, tasks, and case updates from your portal.</p></article></div></section>
-<section class="contact-band" id="contact"><div><div class="eyebrow">LET’S GET STARTED</div><h2>Ready to take your next step?</h2><p>Tell us where you are in your journey. We’ll help you find a place to begin.</p></div><button class="btn gold" onclick="openEnquiry()">Contact Edu Connect →</button></section></main><footer>© 2026 Edu Connect <span>Academy · Consultancy · Student support</span></footer></div>
-<div id="appView" class="app hidden"><aside class="sidebar"><a class="brand sidebrand" href="#" onclick="showPublic();return false"><img class="public-brand-logo" src="assets/edu-connect-group-logo.jpeg" alt="Edu Connect Group logo"><span><b>EDU CONNECT</b><small>STUDENT PORTAL</small></span></a><label class="role-label" for="roleSelect">DEMO WORKSPACE</label><select id="roleSelect" onchange="changeRole(this.value)"><option value="student">Student</option><option value="tutor">Tutor</option><option value="consultant">Consultant</option><option value="admin">Administrator</option></select><nav id="sideNav"></nav><div class="sidebar-bottom"><button class="navitem" onclick="showPublic()"><span>↩</span> Back to website</button><div class="signed-in"><span class="avatar" id="sideAvatar">JM</span><div><b id="sideName">Jordan M.</b><small id="sideRole">Student account</small></div><button class="dots" onclick="notify('Account menu')">•••</button></div></div></aside><main class="workspace"><header class="worktop"><button class="mobile-nav" onclick="toggleSidebar()">☰</button><div class="crumb">Edu Connect <span>/</span> <b id="currentRole">Student</b></div><div class="work-actions"><button class="icon-button" title="Notifications" onclick="notify('You are all caught up.')">♧<i></i></button><button class="btn primary small" onclick="quickAction()">+ <span id="quickLabel">Request support</span></button></div></header><div id="screen" class="screen"></div><footer class="app-footer">Edu Connect · Creating Bright Futures, Together <span>Demo workspace</span></footer></main></div>
-<div id="modalHost"></div><div id="toast" class="toast" role="status" aria-live="polite"></div><script src="app.js"></script></body></html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#104b25" />
+    <meta
+      name="description"
+      content="Practical guidance for university applications, student permits, documents, and deadlines from Edu Connect Consultancy."
+    />
+    <title>Edu Connect | Creating Bright Futures, Together</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="#home" onclick="showPublic()">
+        <img
+          class="public-brand-logo"
+          src="assets/edu-connect-group-logo.jpeg"
+          alt="Edu Connect Group logo"
+        /><span
+          ><b>EDU CONNECT</b
+          ><small>CREATING BRIGHT FUTURES, TOGETHER</small></span
+        ></a
+      >
+      <nav class="public-nav">
+        <a href="academy.html">Academy</a
+        ><a href="consultancy.html">Consultancy</a><a href="about.html">About</a
+        ><a href="contact.html">Contact</a>
+      </nav>
+      <div class="top-actions">
+        <button class="btn light" onclick="openSignIn()">Sign in</button
+        ><button class="btn primary" onclick="openEnquiry()">
+          Get started
+        </button>
+      </div>
+    </header>
+    <div id="publicView">
+      <main id="home">
+        <section class="hero">
+          <div class="hero-copy">
+            <div class="eyebrow">EDU CONNECT CONSULTANCY · STUDENT SUPPORT</div>
+            <h1>
+              Plan your next step.<br /><span>Move forward</span> with
+              confidence.
+            </h1>
+            <p>
+              Get practical guidance for university applications, permit
+              preparation, documents, and deadlines. We keep every step clear,
+              organized, and personal.
+            </p>
+            <div class="actions">
+              <button class="btn primary" onclick="openEnquiry('Consultancy')">
+                Get consultancy support →</button
+              ><a class="btn gold" href="#services">Explore our services</a>
+            </div>
+            <div class="proof">
+              <span>✓ Student-focused support</span
+              ><span>✓ Clear steps and guidance</span>
+            </div>
+          </div>
+          <div class="hero-card">
+            <div class="hero-logo">✦</div>
+            <span class="hero-card-label">EDU CONNECT</span>
+            <h2>Guidance for your next step.</h2>
+            <p>Applications, permits, and student support.</p>
+            <div class="floating f1">
+              <b>Applications</b
+              ><small>Clear steps, from start to submit.</small>
+            </div>
+            <div class="floating f2">
+              <b>Student support</b><small>Guidance, one step at a time.</small>
+            </div>
+          </div>
+        </section>
+        <section class="section" id="services">
+          <div class="section-title">
+            <div class="eyebrow">OUR SERVICES</div>
+            <h2>Practical guidance for your next step.</h2>
+            <p>
+              Start with consultancy support, with Academy tutorials available
+              when you need extra learning support.
+            </p>
+          </div>
+          <div class="service-grid">
+            <article class="service-card" id="consultancy">
+              <img
+                class="service-logo"
+                src="assets/edu-connect-consultancy-logo.jpeg"
+                alt="Edu Connect Consultancy logo"
+              />
+              <div class="tag">EDU CONNECT CONSULTANCY</div>
+              <h3>Plan your next step</h3>
+              <p>
+                Get organized guidance with university applications, permit
+                preparation, documents, and deadlines.
+              </p>
+              <ul>
+                <li>University and course applications</li>
+                <li>Permit application preparation support</li>
+                <li>Checklists, appointments, and case updates</li>
+              </ul>
+              <button class="linkbtn" onclick="openEnquiry('Consultancy')">
+                Talk to our team →
+              </button>
+            </article>
+            <article class="service-card" id="academy">
+              <img
+                class="service-logo"
+                src="assets/edu-connect-academy-logo.jpeg"
+                alt="Edu Connect Academy logo"
+              />
+              <div class="tag">EDU CONNECT ACADEMY</div>
+              <h3>Extra support for your studies</h3>
+              <p>
+                Build confidence in your studies with supportive tutorial
+                groups, guided learning, and progress notes.
+              </p>
+              <ul>
+                <li>Small group tutorials</li>
+                <li>Session schedules and attendance</li>
+                <li>Learning resources and progress notes</li>
+              </ul>
+              <button class="linkbtn" onclick="openEnquiry('Academy')">
+                Explore learning support →
+              </button>
+            </article>
+          </div>
+        </section>
+        <section class="section tinted" id="how">
+          <div class="section-title">
+            <div class="eyebrow">HOW IT WORKS</div>
+            <h2>Application support, made easier to follow.</h2>
+            <p>Get personal guidance and stay organized at every step.</p>
+          </div>
+          <div class="steps">
+            <article>
+              <b>01 · CONNECT</b>
+              <h3>Tell us what you need</h3>
+              <p>Tell us about your university application or permit plans.</p>
+            </article>
+            <article>
+              <b>02 · PLAN</b>
+              <h3>Get a practical plan</h3>
+              <p>
+                Get a clear checklist for documents, deadlines, and next steps.
+              </p>
+            </article>
+            <article>
+              <b>03 · PROGRESS</b>
+              <h3>Keep moving forward</h3>
+              <p>Keep track of your tasks, appointments, and case updates.</p>
+            </article>
+          </div>
+        </section>
+        <section class="contact-band" id="contact">
+          <div>
+            <div class="eyebrow">LET’S GET STARTED</div>
+            <h2>Ready to start your application journey?</h2>
+            <p>
+              Tell our consultancy team what you need, and we’ll help you find
+              the right place to begin.
+            </p>
+          </div>
+          <button class="btn gold" onclick="openEnquiry('Consultancy')">
+            Request consultancy support →
+          </button>
+        </section>
+      </main>
+      <footer>
+        © 2026 Edu Connect
+        <span>Consultancy · Student support · Academy</span>
+      </footer>
+    </div>
+    <div id="appView" class="app hidden">
+      <aside class="sidebar">
+        <a class="brand sidebrand" href="#" onclick="showPublic();return false"
+          ><img
+            class="public-brand-logo"
+            src="assets/edu-connect-group-logo.jpeg"
+            alt="Edu Connect Group logo"
+          /><span><b>EDU CONNECT</b><small>STUDENT PORTAL</small></span></a
+        ><label class="role-label" for="roleSelect">DEMO WORKSPACE</label
+        ><select id="roleSelect" onchange="changeRole(this.value)">
+          <option value="student">Student</option>
+          <option value="tutor">Tutor</option>
+          <option value="consultant">Consultant</option>
+          <option value="admin">Administrator</option>
+        </select>
+        <nav id="sideNav"></nav>
+        <div class="sidebar-bottom">
+          <button class="navitem" onclick="showPublic()">
+            <span>↩</span> Back to website
+          </button>
+          <div class="signed-in">
+            <span class="avatar" id="sideAvatar">JM</span>
+            <div>
+              <b id="sideName">Jordan M.</b
+              ><small id="sideRole">Student account</small>
+            </div>
+            <button class="dots" onclick="notify('Account menu')">•••</button>
+          </div>
+        </div>
+      </aside>
+      <main class="workspace">
+        <header class="worktop">
+          <button class="mobile-nav" onclick="toggleSidebar()">☰</button>
+          <div class="crumb">
+            Edu Connect <span>/</span> <b id="currentRole">Student</b>
+          </div>
+          <div class="work-actions">
+            <button
+              class="icon-button"
+              title="Notifications"
+              onclick="notify('You are all caught up.')"
+            >
+              ♧<i></i></button
+            ><button class="btn primary small" onclick="quickAction()">
+              + <span id="quickLabel">Request support</span>
+            </button>
+          </div>
+        </header>
+        <div id="screen" class="screen"></div>
+        <footer class="app-footer">
+          Edu Connect · Creating Bright Futures, Together
+          <span>Demo workspace</span>
+        </footer>
+      </main>
+    </div>
+    <div id="modalHost"></div>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <script src="app.js"></script>
+  </body>
+</html>

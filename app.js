@@ -1,17 +1,976 @@
-const key='eduConnectDemo_v2';const seed={role:'student',tasks:[{text:'Complete student profile',done:true,due:'Done'},{text:'Upload certified transcript',done:false,due:'20 Oct'},{text:'Confirm consultation time',done:false,due:'22 Oct'}],cases:[{id:'EC-1048',student:'Jordan M.',service:'University application',destination:'Zambia',intake:'2027 intake',status:'In progress',owner:'Grace K.',progress:65,updated:'12 Oct'},{id:'EC-1032',student:'Amina P.',service:'Study planning consultation',destination:'South Africa',intake:'2027 intake',status:'Documents needed',owner:'Grace K.',progress:35,updated:'11 Oct'},{id:'EC-1029',student:'Tapiwa C.',service:'Permit preparation',destination:'Zambia',intake:'2026',status:'Awaiting student',owner:'Michael B.',progress:70,updated:'10 Oct'}],sessions:[{title:'Mathematics tutorial',group:'Group B',tutor:'Peter T.',date:'14 Oct',time:'14:00–15:30',mode:'In person',status:'Upcoming'},{title:'Academic writing',group:'Online',tutor:'Ruth K.',date:'16 Oct',time:'10:00–11:00',mode:'Online',status:'Upcoming'}],documents:[{name:'National ID or passport',status:'Received',date:'08 Oct'},{name:'Academic transcript',status:'Needed',date:'—'},{name:'Proof of address',status:'Received',date:'10 Oct'},{name:'Passport photo',status:'Needed',date:'—'}],messages:[{from:'Grace K. · Consultancy support',text:'Thanks for sending your ID. The next item we need is your academic transcript. You can add it in Documents.',date:'12 Oct · 11:24',fresh:true},{from:'Peter T. · Academy',text:'Welcome to Group B. I added this week’s algebra practice notes to your learning resources.',date:'09 Oct · 15:10',fresh:false}],people:[{name:'Jordan M.',email:'jordan@example.com',role:'Student',status:'Active'},{name:'Peter T.',email:'peter@example.com',role:'Tutor',status:'Active'},{name:'Grace K.',email:'grace@example.com',role:'Consultant',status:'Active'},{name:'Amina P.',email:'amina@example.com',role:'Student',status:'Active'}],programs:[{name:'Mathematics tutorial',category:'Academy',groups:2,status:'Active'},{name:'Academic writing',category:'Academy',groups:1,status:'Active'},{name:'University application guidance',category:'Consultancy',groups:0,status:'Active'},{name:'Permit preparation support',category:'Consultancy',groups:0,status:'Active'}],payments:[{ref:'INV-2026-014',student:'Jordan M.',item:'Academy · October',amount:'K 850',status:'Paid',date:'02 Oct'},{ref:'INV-2026-013',student:'Amina P.',item:'Consultation',amount:'K 300',status:'Pending',date:'11 Oct'}],enquiries:[]};let state=load(),active=document.body.dataset.page||'overview';if(document.body.dataset.role)state.role=document.body.dataset.role;const roles={student:{label:'Student',name:'Jordan M.',initials:'JM',nav:[['OVERVIEW',['overview:▦:Overview','learning:▤:My learning','applications:✦:My applications','documents:▧:Documents','messages:✉:Messages','appointments:◷:Appointments','payments:K:Payments']],['ACCOUNT',['profile:○:My profile']] ]},tutor:{label:'Tutor',name:'Peter T.',initials:'PT',nav:[['TEACHING',['overview:▦:Overview','schedule:◷:My schedule','groups:▤:My groups','attendance:✓:Attendance','resources:▧:Resources','messages:✉:Messages']],['ACCOUNT',['profile:○:My profile']]]},consultant:{label:'Consultant',name:'Grace K.',initials:'GK',nav:[['CASEWORK',['overview:▦:Overview','cases:✦:Case pipeline','appointments:◷:Appointments','documents:▧:Documents','messages:✉:Messages','tasks:✓:My tasks']],['ACCOUNT',['profile:○:My profile']]]},admin:{label:'Administrator',name:'Admin User',initials:'AD',nav:[['MANAGEMENT',['overview:▦:Overview','people:♙:People','programs:▤:Services','groups:◉:Tutorial groups','cases:✦:All cases','payments:K:Payments','reports:▥:Reports','settings:⚙:Settings']]]}};function load(){try{return{...structuredClone(seed),...JSON.parse(localStorage.getItem(key)||'{}')}}catch{return structuredClone(seed)}}function save(){localStorage.setItem(key,JSON.stringify(state))}function esc(s=''){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}function showPublic(){location.href=document.body.dataset.role?'../../index.html':'index.html'}function enterApp(role=state.role){state.role=role;save();location.href='portal/'+role+'/overview.html'}function changeRole(r){state.role=r;save();location.href='../'+r+'/overview.html'}function shell(){let r=roles[state.role];document.getElementById('roleSelect').value=state.role;document.getElementById('currentRole').textContent=r.label;document.getElementById('sideName').textContent=r.name;document.getElementById('sideRole').textContent=r.label+' account';document.getElementById('sideAvatar').textContent=r.initials;document.getElementById('sideNav').innerHTML=r.nav.map(g=>`<div class="navsection">${g[0]}</div>`+g[1].map(x=>{let [id,ic,n]=x.split(':');return `<button class="navitem ${active===id?'active':''}" onclick="go('${id}')"><span>${ic}</span>${n}</button>`}).join('')).join('');document.getElementById('quickLabel').textContent={student:'Request support',tutor:'Record attendance',consultant:'Add case note',admin:'Add person'}[state.role]}function go(p){location.href=p+'.html'}function toggleSidebar(){document.querySelector('.sidebar').classList.toggle('open')}function notify(s){let t=document.getElementById('toast');t.textContent=s;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500)}function head(t,d,b=''){return `<div class="pagehead"><div><h1>${t}</h1><p>${d}</p></div>${b?`<div class="page-actions">${b}</div>`:''}</div>`}function button(t,fn,cls='primary'){return `<button class="btn ${cls}" onclick="${fn}">${t}</button>`}function stat(a,b,c,i='•'){return `<article class="stat"><div class="stat-head">${a}<span class="stat-icon">${i}</span></div><div class="stat-num">${b}</div><div class="stat-note">${c}</div></article>`}function panel(t,b,link=''){return `<article class="panel"><div class="panel-head"><h2>${t}</h2>${link}</div>${b}</article>`}function badge(s){let c=/needed|awaiting|pending|new|overdue|unassigned/i.test(s)?'gold':/online|review/i.test(s)?'blue':/completed|received|paid|active|upcoming|in progress/i.test(s)?'':'gray';return `<span class="badge ${c}">${esc(s)}</span>`}function table(h,rs){return `<div class="tablewrap"><table class="data-table"><thead><tr>${h.map(x=>`<th>${x}</th>`).join('')}</tr></thead><tbody>${rs||'<tr><td colspan="8"><div class="empty">Nothing to show yet.</div></td></tr>'}</tbody></table></div>`}function row(n,s,b=''){return `<div class="row"><div class="rowcopy"><b>${esc(n)}</b><small>${esc(s)}</small></div>${b?badge(b):''}</div>`}function render(){let meta={overview:['Your overview','Here is what needs your attention today.'],learning:['My learning','Your groups, schedule, and learning resources.'],applications:['My applications','Track your consultancy cases and next steps.'],documents:['Documents','Check required documents and review statuses.'],messages:['Messages','Keep in touch with your support team.'],appointments:['Appointments','Manage upcoming consultations and meetings.'],payments:['Payments','View invoices and payment history.'],profile:['My profile','Manage your contact details and preferences.'],schedule:['My schedule','Review your teaching sessions.'],groups:['My groups','Students and groups assigned to you.'],attendance:['Attendance','Record student attendance.'],resources:['Resources','Learning materials shared with groups.'],cases:['Case pipeline','Manage student consultancy cases.'],tasks:['My tasks','Track follow-ups and casework.'],people:['People','Manage student and staff accounts.'],programs:['Services','Manage available services.'],reports:['Reports','View system activity.'],settings:['System settings','Configure organization defaults.']}[active]||['Overview',''];let b=({student:{applications:['+ New enquiry','openEnquiry()'],documents:['↑ Add document','addDocument()'],appointments:['+ Book appointment','bookAppointment()'],messages:['+ New message','newMessage()'],learning:['+ Ask about a class',"openEnquiry('Academy')"]},tutor:{schedule:['+ Add session','addSession()'],attendance:['✓ Record attendance','saveAttendance()'],resources:['+ Add resource','addResource()']},consultant:{cases:['+ New case','addCase()'],appointments:['+ Book appointment','bookAppointment()'],tasks:['+ Add task','addTask()'],messages:['+ New message','newMessage()']},admin:{people:['+ Add person','addPerson()'],programs:['+ Add service','addProgram()'],groups:['+ Create group','addSession()'],cases:['+ New case','addCase()'],payments:['+ Record payment','recordPayment()']}}[state.role]?.[active];document.getElementById('screen').innerHTML=head(meta[0],meta[1],b?button(...b):'')+content()}function content(){return state.role==='student'?student():state.role==='tutor'?tutor():state.role==='consultant'?consultant():admin()}
-function student(){if(active==='overview')return `<div class="stats">${stat('Upcoming sessions',state.sessions.length,'On your schedule','▤')}${stat('Application progress','65%','3 of 5 steps complete','✦')}${stat('Documents needed',state.documents.filter(x=>x.status==='Needed').length,'Check your list','▧')}${stat('Unread messages',state.messages.filter(x=>x.fresh).length,'From your team','✉')}</div><div class="dashboard-grid"><div>${panel('Upcoming learning sessions',state.sessions.slice(0,3).map(s=>`<div class="row"><div class="datebox">${esc(s.date.split(' ')[0])}<small>${esc(s.date.split(' ')[1]||'DATE')}</small></div><div class="rowcopy"><b>${esc(s.title)}</b><small>${esc(s.date)} · ${esc(s.time)} · ${esc(s.group)}</small></div>${badge(s.mode)}</div>`).join(''),'<button class="linkbtn" onclick="go(\'learning\')">Full schedule →</button>')+panel('Consultancy case',state.cases.slice(0,1).map(c=>`<div class="row"><div class="rowcopy"><b>${esc(c.service)} · ${esc(c.intake)}</b><small>Assigned to ${esc(c.owner)} · ${esc(c.updated)}</small><div class="progress"><span style="width:${c.progress}%"></span></div></div>${badge(c.status)}</div>`).join(''),'<button class="linkbtn" onclick="go(\'applications\')">Open case →</button>')}</div><div>${panel('Your next steps',state.tasks.filter(x=>!x.done).map(x=>`<div class="taskrow"><span class="taskcheck"></span><span>${esc(x.text)}</span><small>${esc(x.due)}</small></div>`).join('')||'<div class="empty">All caught up.</div>')}<div class="notice">ⓘ <div><b>Reminder</b>Your academic transcript is still needed for your application checklist.</div></div></div></div>`;
-if(active==='learning')return `<div class="dashboard-grid"><div>${panel('My tutorial groups',row('Mathematics · Group B','Peter · Tue 14:00–15:30','Active')+row('Academic writing','Ruth · Thu 10:00 · Online','Active'))}${panel('Learning resources',resource('Algebra revision notes','PDF · Added 12 Oct')+resource('Essay planning guide','PDF · Added 05 Oct'))}</div><div>${panel('This week',state.sessions.map(s=>row(s.title,`${s.date} · ${s.time} · ${s.group}`)).join(''))}${panel('Need another subject?',`<p class="panel-sub">Tell us what you want to learn.</p>${button('Ask about a class',"openEnquiry('Academy')")}`)}</div></div>`;
-if(active==='applications')return `<div class="dashboard-grid"><div>${panel('My cases',table(['CASE','SERVICE','DESTINATION','STATUS','PROGRESS'],state.cases.filter(c=>c.student==='Jordan M.').map(c=>`<tr><td><b>${esc(c.id)}</b><br>${esc(c.intake)}</td><td>${esc(c.service)}</td><td>${esc(c.destination)}</td><td>${badge(c.status)}</td><td>${c.progress}%<div class="progress"><span style="width:${c.progress}%"></span></div></td></tr>`)))}</div><div>${panel('Application steps',`<div class="timeline"><div class="timeline-step">Initial consultation<small>Completed · 03 Oct</small></div><div class="timeline-step">Document checklist<small>In progress</small></div><div class="timeline-step">Prepare application<small>Next step</small></div><div class="timeline-step">Submission and follow-up<small>Not started</small></div></div>`)}<div class="notice">ⓘ <div><b>Decision stays with the institution or authority</b>Edu Connect helps organize and prepare applications; it cannot guarantee admission or permit approval.</div></div></div></div>`;
-if(active==='documents')return panel('Document checklist',`<p class="panel-sub">Only share documents requested for your case.</p>${table(['DOCUMENT','STATUS','LAST UPDATED','ACTION'],state.documents.map((d,i)=>`<tr><td>${esc(d.name)}</td><td>${badge(d.status)}</td><td>${esc(d.date)}</td><td>${d.status==='Needed'?`<button class="smallbtn" onclick="addDocument(${i})">Add details</button>`:'—'}</td></tr>`))}`);
-if(active==='messages')return messages();if(active==='appointments')return panel('Appointments',row('Study planning consultation','Grace · 22 Oct · 11:00','Upcoming')+row('Academy progress check-in','Peter · 29 Oct · 14:30','Upcoming'));if(active==='payments')return panel('Payment history',table(['REFERENCE','ITEM','AMOUNT','DATE','STATUS'],state.payments.filter(p=>p.student==='Jordan M.').map(p=>`<tr><td>${esc(p.ref)}</td><td>${esc(p.item)}</td><td>${esc(p.amount)}</td><td>${esc(p.date)}</td><td>${badge(p.status)}</td></tr>`)));return profile()}
-function tutor(){if(active==='overview')return `<div class="stats">${stat('Sessions this week','5','Across 2 groups','▤')}${stat('Students','18','In assigned groups','♙')}${stat('Attendance to record','2','Recent sessions','✓')}${stat('Resources shared','8','Available to students','▧')}</div><div class="dashboard-grid"><div>${panel('Today and upcoming',state.sessions.map(s=>row(s.title,`${s.date} · ${s.time} · ${s.group}`,s.status)).join(''))}${panel('Groups needing follow-up',row('Mathematics · Group B','2 students missed last session','Follow up'))}</div><div>${panel('Quick actions',button('Record attendance',"go('attendance')",'light')+'<br><br>'+button('Add learning resource','addResource()','light'))}${panel('Teaching reminders','<div class="taskrow">□ <span>Upload weekly practice sheet</span><small>Today</small></div>')}</div></div>`;if(active==='schedule')return panel('Teaching schedule',state.sessions.map(s=>row(s.title,`${s.group} · ${s.date} · ${s.time} · ${s.mode}`,s.status)).join(''));if(active==='groups')return `<div class="dashboard-grid">${panel('Mathematics · Group B',`<p class="panel-sub">Tuesday · 14:00 · 9 students · Peter T.</p>${table(['STUDENT','ATTENDANCE','PROGRESS'],['Jordan M.','Amina P.','Tapiwa C.','Leya S.'].map((x,i)=>`<tr><td>${x}</td><td>${badge(i===2?'Follow up':'Good')}</td><td>${i===2?'Needs check-in':'On track'}</td></tr>`).join(''))}`)}${panel('Academic writing · Online',`<p class="panel-sub">Thursday · 10:00 · 9 students</p>${button('View group',"notify('Group details opened')",'light')}`)}</div>`;if(active==='attendance')return panel('Record attendance',`<div class="field"><label>Session</label><select id="attendanceSession">${state.sessions.map((s,i)=>`<option>${esc(s.title)} · ${esc(s.date)} · ${esc(s.group)}</option>`).join('')}</select></div><div class="checklist">${['Jordan M.','Amina P.','Tapiwa C.','Leya S.'].map(n=>`<label class="check-item"><input type="checkbox" checked><span>${n}</span><small>Present</small></label>`).join('')}</div><div style="margin-top:15px">${button('Save attendance','saveAttendance()')}</div>`);if(active==='resources')return panel('Learning resources',resource('Algebra revision notes','Mathematics · PDF · 12 Oct')+resource('Essay planning guide','Academic writing · PDF · 05 Oct')+resource('Functions practice set','Mathematics · PDF · 01 Oct'));if(active==='messages')return messages();return profile()}
-function consultant(){if(active==='overview')return `<div class="stats">${stat('Active cases',state.cases.length,'Across your queue','✦')}${stat('Waiting on student',state.cases.filter(c=>/document|student/i.test(c.status)).length,'Documents or details','▧')}${stat('Appointments today','2','Next at 11:00','◷')}${stat('Follow-ups due',state.tasks.filter(t=>!t.done).length,'Needs action','✓')}</div><div class="dashboard-grid"><div>${panel('Case pipeline',caseTable())}${panel('Upcoming appointments',row('Jordan M. · Study planning','Today · 11:00 · In person','Upcoming')+row('Amina P. · Document review','Today · 14:30 · Online','Upcoming'))}</div><div>${panel('My follow-ups',state.tasks.filter(t=>!t.done).map(t=>`<div class="taskrow"><span class="taskcheck"></span><span>${esc(t.text)}</span><small>${esc(t.due)}</small></div>`).join('')||'<div class="empty">No open follow-ups.</div>')}<div class="notice">ⓘ <div><b>Protect student documents</b>Only request and view information needed for the active case.</div></div></div></div>`;if(active==='cases')return panel('Case pipeline',`<div class="searchrow"><input placeholder="Search cases or students" oninput="filterRows(this,'caseRow')"><select onchange="filterStatus(this,'caseRow')"><option value="">All statuses</option>${['New enquiry','In progress','Documents needed','Awaiting student','Submitted','Awaiting decision','Completed'].map(x=>`<option>${x}</option>`)}</select></div>${caseTable()}`);if(active==='appointments')return panel('Appointments',row('Jordan M. · Study planning','Today · 11:00 · In person','Upcoming')+row('Amina P. · Document review','Today · 14:30 · Online','Upcoming')+row('Tapiwa C. · Permit preparation','22 Oct · 09:00 · Online','Upcoming'));if(active==='documents')return panel('Student document review',table(['STUDENT','DOCUMENT','STATUS','RECEIVED','ACTION'],state.documents.map(d=>`<tr><td>Jordan M.</td><td>${esc(d.name)}</td><td>${badge(d.status)}</td><td>${esc(d.date)}</td><td><button class="smallbtn" onclick="notify('Connect secure document storage to review files.')">Review</button></td></tr>`)));if(active==='messages')return messages();if(active==='tasks')return panel('Follow-up tasks',state.tasks.map((t,i)=>`<div class="taskrow"><input type="checkbox" ${t.done?'checked':''} onchange="toggleTask(${i},this.checked)"><span>${esc(t.text)}</span><small>${esc(t.due)}</small></div>`).join('')||'<div class="empty">No tasks yet.</div>');return profile()}
-function admin(){if(active==='overview')return `<div class="stats">${stat('Students','124','Active accounts','♙')}${stat('Tutorial groups','12','Active subjects','▤')}${stat('Open consultancy cases',state.cases.length,'In pipeline','✦')}${stat('Outstanding payments','K 2,400','Demo receivables','K')}</div><div class="dashboard-grid"><div>${panel('Recent consultancy activity',caseTable())}${panel('Services',state.programs.map(p=>row(p.name,`${p.category} · ${p.groups} groups`,p.status)).join(''))}</div><div>${panel('Quick management',button('Add a person','addPerson()','light')+'<br><br>'+button('Create tutorial session','addSession()','light')+'<br><br>'+button('Start consultancy case','addCase()','light'))}${panel('System activity',row('New enquiry received','Today · 09:42','New')+row('Payment recorded','Yesterday · 16:20','Completed'))}</div></div>`;if(active==='people')return panel('People directory',`<div class="searchrow"><input placeholder="Search name, email, role" oninput="filterRows(this,'peopleRow')"><select onchange="filterStatus(this,'peopleRow')"><option value="">All roles</option><option>Student</option><option>Tutor</option><option>Consultant</option><option>Administrator</option></select></div>${table(['NAME','EMAIL','ROLE','STATUS','ACTION'],state.people.map(p=>`<tr class="peopleRow"><td><b>${esc(p.name)}</b></td><td>${esc(p.email)}</td><td>${esc(p.role)}</td><td>${badge(p.status)}</td><td><button class="smallbtn" onclick="notify('Authentication actions need a connected account system.')">Manage</button></td></tr>`))}`);if(active==='programs')return panel('Service catalogue',table(['SERVICE','AREA','GROUPS','STATUS','ACTION'],state.programs.map(p=>`<tr><td><b>${esc(p.name)}</b></td><td>${esc(p.category)}</td><td>${p.groups}</td><td>${badge(p.status)}</td><td><button class="smallbtn" onclick="notify('Service editor opened in demo.')">Edit</button></td></tr>`)));if(active==='groups')return panel('Tutorial groups',table(['GROUP / SUBJECT','TUTOR','SCHEDULE','STUDENTS','STATUS'],state.sessions.map(s=>`<tr><td><b>${esc(s.group)}</b><br>${esc(s.title)}</td><td>${esc(s.tutor)}</td><td>${esc(s.date)} · ${esc(s.time)}</td><td>9</td><td>${badge(s.status)}</td></tr>`)));if(active==='cases')return panel('All consultancy cases',caseTable());if(active==='payments')return panel('Payments and invoices',table(['REFERENCE','STUDENT','ITEM','AMOUNT','DATE','STATUS'],state.payments.map((p,i)=>`<tr><td>${esc(p.ref)}</td><td>${esc(p.student)}</td><td>${esc(p.item)}</td><td>${esc(p.amount)}</td><td>${esc(p.date)}</td><td>${badge(p.status)} ${p.status==='Pending'?`<button class="smallbtn" onclick="markPaid(${i})">Mark paid</button>`:''}</td></tr>`)));if(active==='reports')return `<div class="stats">${stat('Active students','124','All programs','♙')}${stat('Tutorial attendance','86%','Current month','✓')}${stat('Cases completed','38','This term','✦')}${stat('Enquiry conversion','42%','This term','↗')}</div>${panel('Service performance',table(['SERVICE','GROUPS','STATUS'],state.programs.map(p=>`<tr><td>${esc(p.name)}</td><td>${p.groups||'—'}</td><td>${badge(p.status)}</td></tr>`)))}`;if(active==='settings')return panel('General settings',`<div class="formgrid"><div class="field"><label>Organization</label><input value="Edu Connect"></div><div class="field"><label>Contact email</label><input value="hello@educonnect.example"></div><div class="field"><label>Currency</label><select><option>ZMW · Zambian Kwacha</option><option>USD</option></select></div><div class="field"><label>Time zone</label><select><option>Africa/Lusaka</option></select></div></div>${button('Save settings',"notify('Settings saved in this demo.')")}`);return profile()}
-function caseTable(){return table(['CASE','STUDENT','SERVICE','DESTINATION','STATUS','OWNER','ACTION'],state.cases.map(c=>`<tr class="caseRow"><td><b>${esc(c.id)}</b><br>${esc(c.intake)}</td><td>${esc(c.student)}</td><td>${esc(c.service)}</td><td>${esc(c.destination)}</td><td>${badge(c.status)}</td><td>${esc(c.owner)}</td><td><button class="smallbtn" onclick="updateCase('${esc(c.id)}')">Update</button></td></tr>`))}function resource(n,s){return `<div class="resource"><div class="resource-icon">▧</div><div><b>${esc(n)}</b><small>${esc(s)}</small></div><button class="smallbtn" onclick="notify('Connect file storage to open resources.')">Open</button></div>`}function messages(){return panel('Messages',state.messages.map(m=>`<div class="message"><div class="avatar">${esc(m.from.split(' ').map(x=>x[0]).slice(0,2).join(''))}</div><div class="rowcopy"><b>${esc(m.from)} ${m.fresh?badge('New'):''}</b><p>${esc(m.text)}</p><small>${esc(m.date)}</small></div></div>`).join('')+button('New message','newMessage()','light'))}function profile(){return panel('Contact information',`<div class="formgrid"><div class="field"><label>Full name</label><input value="${esc(roles[state.role].name)}"></div><div class="field"><label>Email</label><input value="${esc(roles[state.role].name.toLowerCase().replaceAll(' ','.'))}@example.com"></div><div class="field"><label>Phone</label><input placeholder="Add phone number"></div><div class="field"><label>Preferred contact method</label><select><option>Email</option><option>Phone</option><option>WhatsApp</option></select></div></div>${button('Save profile',"notify('Profile changes saved in demo.')")}`)+panel('Notifications',`<label class="check-item"><input type="checkbox" checked><span>Email me about appointments and case updates</span></label><label class="check-item"><input type="checkbox" checked><span>Remind me about upcoming sessions</span></label>`)}
-function modal(title,fields,submit='Save',type='generic',id=''){document.getElementById('modalHost').innerHTML=`<div class="modalback" onclick="if(event.target===this)closeModal()"><form class="modal" data-form="${type}" data-id="${esc(id)}" onsubmit="handleForm(event)"><div class="modalhead"><div><h2>${esc(title)}</h2><p>Complete the fields below.</p></div><button type="button" class="close" onclick="closeModal()">×</button></div>${fields}<div class="modal-foot"><button type="button" class="btn light" onclick="closeModal()">Cancel</button><button class="btn primary" type="submit">${submit} →</button></div></form></div>`}function closeModal(){document.getElementById('modalHost').innerHTML=''}function openSignIn(){modal('Welcome to Edu Connect',`<p>Choose a demo workspace to preview the frontend.</p><div class="field"><label>Workspace</label><select id="loginRole"><option value="student">Student</option><option value="tutor">Tutor</option><option value="consultant">Consultant</option><option value="admin">Administrator</option></select></div><div class="field"><label>Email</label><input type="email" required placeholder="name@example.com"></div><div class="field"><label>Password</label><input type="password" required placeholder="Enter password"></div>`,'Sign in','login')}function openEnquiry(s=''){modal(s?'Request '+s+' support':'Get started',`<div class="field"><label>Full name</label><input name="name" required></div><div class="formgrid"><div class="field"><label>Email</label><input type="email" name="email" required></div><div class="field"><label>Phone / WhatsApp</label><input name="phone"></div></div><div class="formgrid"><div class="field"><label>Service</label><select name="service"><option ${s==='Academy'?'selected':''}>Academy</option><option ${s==='Consultancy'?'selected':''}>Consultancy</option><option ${!s?'selected':''}>Not sure yet</option></select></div><div class="field"><label>Preferred contact</label><select name="contact"><option>Email</option><option>Phone</option><option>WhatsApp</option></select></div></div><div class="field"><label>What support do you need?</label><textarea name="details" rows="3"></textarea></div>`,'Send enquiry','enquiry')}function addCase(){modal('Create consultancy case',`<div class="formgrid"><div class="field"><label>Student name</label><input name="student" required value="${state.role==='student'?'Jordan M.':''}"></div><div class="field"><label>Service type</label><select name="service"><option>University application</option><option>Permit preparation</option><option>Study planning consultation</option></select></div><div class="field"><label>Destination</label><input name="destination" required></div><div class="field"><label>Intake / target date</label><input name="intake" placeholder="2027 intake"></div></div><div class="field"><label>Assigned consultant</label><input name="owner" value="${state.role==='consultant'?roles.consultant.name:''}"></div><div class="field"><label>Notes</label><textarea name="notes"></textarea></div>`,'Create case','case')}function addTask(){modal('Add follow-up task',`<div class="field"><label>Task</label><input name="text" required></div><div class="field"><label>Due date</label><input name="due" type="date"></div>`,'Add task','task')}function addSession(){modal('Add tutorial session',`<div class="field"><label>Session title</label><input name="title" required></div><div class="formgrid"><div class="field"><label>Group</label><input name="group"></div><div class="field"><label>Tutor</label><input name="tutor" value="${state.role==='tutor'?roles.tutor.name:''}"></div><div class="field"><label>Date</label><input type="date" name="date" required></div><div class="field"><label>Time</label><input name="time" placeholder="14:00–15:30"></div></div><div class="field"><label>Delivery</label><select name="mode"><option>In person</option><option>Online</option></select></div>`,'Add session','session')}function addPerson(){modal('Add a person',`<div class="field"><label>Full name</label><input name="name" required></div><div class="field"><label>Email</label><input type="email" name="email" required></div><div class="field"><label>Role</label><select name="role"><option>Student</option><option>Tutor</option><option>Consultant</option><option>Administrator</option></select></div>`,'Add person','person')}function addDocument(){modal('Add document details',`<div class="field"><label>Document name</label><input name="name" required placeholder="Academic transcript"></div><div class="field"><label>Select file (demo only)</label><input type="file" accept=".pdf,.jpg,.jpeg,.png"></div><p class="panel-sub">This demo records the document name only. Secure upload needs backend storage.</p>`,'Save document','document')}function newMessage(){modal('New message',`<div class="field"><label>Message</label><textarea name="text" required rows="5"></textarea></div>`,'Send message','message')}function bookAppointment(){modal('Request an appointment',`<div class="field"><label>Appointment type</label><select name="type"><option>University application consultation</option><option>Permit guidance</option><option>Academy progress check-in</option></select></div><div class="formgrid"><div class="field"><label>Preferred date</label><input type="date" name="date" required></div><div class="field"><label>Preferred time</label><input type="time" name="time" required></div></div><div class="field"><label>Meeting format</label><select name="mode"><option>In person</option><option>Online</option></select></div>`,'Request appointment')}function addResource(){modal('Add learning resource',`<div class="field"><label>Resource title</label><input required></div><div class="field"><label>Attach file (demo only)</label><input type="file" accept=".pdf,.doc,.docx"></div><p class="panel-sub">Connect secure file storage to share actual files.</p>`,'Save resource')}function addProgram(){modal('Add service',`<div class="field"><label>Service name</label><input required></div><div class="field"><label>Service area</label><select><option>Academy</option><option>Consultancy</option></select></div>`,'Save service')}function recordPayment(){modal('Record payment',`<div class="field"><label>Student</label><input required></div><div class="formgrid"><div class="field"><label>Amount</label><input required placeholder="K 0"></div><div class="field"><label>Invoice reference</label><input></div></div><div class="field"><label>Item</label><input></div>`,'Record payment')}function updateCase(id){let c=state.cases.find(x=>x.id===id);if(!c)return;modal('Update case · '+id,`<div class="field"><label>Status</label><select name="status">${['New enquiry','In progress','Documents needed','Awaiting student','Submitted','Awaiting decision','Completed','On hold'].map(x=>`<option ${c.status===x?'selected':''}>${x}</option>`).join('')}</select></div><div class="field"><label>Assigned to</label><input name="owner" value="${esc(c.owner)}"></div><div class="field"><label>Progress %</label><input type="number" min="0" max="100" name="progress" value="${c.progress}"></div>`,'Save update','updatecase',id)}function handleForm(e){e.preventDefault();let f=e.currentTarget,v=Object.fromEntries(new FormData(f)),type=f.dataset.form;if(type==='login'){let selected=document.getElementById('loginRole').value;closeModal();enterApp(selected);return}if(type==='enquiry')state.enquiries.unshift({...v,status:'New',date:new Date().toLocaleDateString()});if(type==='case')state.cases.unshift({id:'EC-'+Math.floor(1050+Math.random()*900),student:v.student||'Jordan M.',service:v.service,destination:v.destination||'—',intake:v.intake||'—',status:'New enquiry',owner:v.owner||'Unassigned',progress:10,updated:'Today'});if(type==='task')state.tasks.unshift({text:v.text,done:false,due:v.due||'No due date'});if(type==='session')state.sessions.unshift({title:v.title,group:v.group||'New group',tutor:v.tutor||roles[state.role].name,date:v.date,time:v.time,mode:v.mode,status:'Upcoming'});if(type==='person')state.people.unshift({name:v.name,email:v.email,role:v.role,status:'Invited'});if(type==='document')state.documents.unshift({name:v.name,status:'Submitted for review',date:'Today'});if(type==='message')state.messages.unshift({from:roles[state.role].name+' · '+roles[state.role].label,text:v.text,date:'Just now',fresh:true});if(type==='updatecase'){let c=state.cases.find(x=>x.id===f.dataset.id);if(c)Object.assign(c,{status:v.status,owner:v.owner,progress:Number(v.progress),updated:'Today'})}save();closeModal();render();notify(type==='enquiry'?'Thank you. Your enquiry is saved in this demo.':'Saved in this demo.')}function quickAction(){if(state.role==='student')openEnquiry();else if(state.role==='tutor')go('attendance');else if(state.role==='consultant')addTask();else addPerson()}function saveAttendance(){notify('Attendance saved in this demo. Connect a backend to retain registers.')}function markPaid(i){state.payments[i].status='Paid';save();render();notify('Payment marked paid in the demo.')}function toggleTask(i,v){state.tasks[i].done=v;save();render()}function filterRows(input,cls){document.querySelectorAll('.'+cls).forEach(x=>x.style.display=x.textContent.toLowerCase().includes(input.value.toLowerCase())?'':'none')}function filterStatus(sel,cls){document.querySelectorAll('.'+cls).forEach(x=>x.style.display=!sel.value||x.textContent.includes(sel.value)?'':'none')}if(document.body.dataset.role){active=document.body.dataset.page||'overview';state.role=document.body.dataset.role;save();shell();render()}document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
+const key = "eduConnectDemo_v2";
+const seed = {
+  role: "student",
+  tasks: [
+    { text: "Complete student profile", done: true, due: "Done" },
+    { text: "Upload certified transcript", done: false, due: "20 Oct" },
+    { text: "Confirm consultation time", done: false, due: "22 Oct" },
+  ],
+  cases: [
+    {
+      id: "EC-1048",
+      student: "Jordan M.",
+      service: "University application",
+      destination: "Zambia",
+      intake: "2027 intake",
+      status: "In progress",
+      owner: "Grace K.",
+      progress: 65,
+      updated: "12 Oct",
+    },
+    {
+      id: "EC-1032",
+      student: "Amina P.",
+      service: "Study planning consultation",
+      destination: "South Africa",
+      intake: "2027 intake",
+      status: "Documents needed",
+      owner: "Grace K.",
+      progress: 35,
+      updated: "11 Oct",
+    },
+    {
+      id: "EC-1029",
+      student: "Tapiwa C.",
+      service: "Permit preparation",
+      destination: "Zambia",
+      intake: "2026",
+      status: "Awaiting student",
+      owner: "Michael B.",
+      progress: 70,
+      updated: "10 Oct",
+    },
+  ],
+  sessions: [
+    {
+      title: "Mathematics tutorial",
+      group: "Group B",
+      tutor: "Peter T.",
+      date: "14 Oct",
+      time: "14:00–15:30",
+      mode: "In person",
+      status: "Upcoming",
+    },
+    {
+      title: "Academic writing",
+      group: "Online",
+      tutor: "Ruth K.",
+      date: "16 Oct",
+      time: "10:00–11:00",
+      mode: "Online",
+      status: "Upcoming",
+    },
+  ],
+  documents: [
+    { name: "National ID or passport", status: "Received", date: "08 Oct" },
+    { name: "Academic transcript", status: "Needed", date: "—" },
+    { name: "Proof of address", status: "Received", date: "10 Oct" },
+    { name: "Passport photo", status: "Needed", date: "—" },
+  ],
+  messages: [
+    {
+      from: "Grace K. · Consultancy support",
+      text: "Thanks for sending your ID. The next item we need is your academic transcript. You can add it in Documents.",
+      date: "12 Oct · 11:24",
+      fresh: true,
+    },
+    {
+      from: "Peter T. · Academy",
+      text: "Welcome to Group B. I added this week’s algebra practice notes to your learning resources.",
+      date: "09 Oct · 15:10",
+      fresh: false,
+    },
+  ],
+  people: [
+    {
+      name: "Jordan M.",
+      email: "jordan@example.com",
+      role: "Student",
+      status: "Active",
+    },
+    {
+      name: "Peter T.",
+      email: "peter@example.com",
+      role: "Tutor",
+      status: "Active",
+    },
+    {
+      name: "Grace K.",
+      email: "grace@example.com",
+      role: "Consultant",
+      status: "Active",
+    },
+    {
+      name: "Amina P.",
+      email: "amina@example.com",
+      role: "Student",
+      status: "Active",
+    },
+  ],
+  programs: [
+    {
+      name: "Mathematics tutorial",
+      category: "Academy",
+      groups: 2,
+      status: "Active",
+    },
+    {
+      name: "Academic writing",
+      category: "Academy",
+      groups: 1,
+      status: "Active",
+    },
+    {
+      name: "University application guidance",
+      category: "Consultancy",
+      groups: 0,
+      status: "Active",
+    },
+    {
+      name: "Permit preparation support",
+      category: "Consultancy",
+      groups: 0,
+      status: "Active",
+    },
+  ],
+  payments: [
+    {
+      ref: "INV-2026-014",
+      student: "Jordan M.",
+      item: "Academy · October",
+      amount: "K 850",
+      status: "Paid",
+      date: "02 Oct",
+    },
+    {
+      ref: "INV-2026-013",
+      student: "Amina P.",
+      item: "Consultation",
+      amount: "K 300",
+      status: "Pending",
+      date: "11 Oct",
+    },
+  ],
+  enquiries: [],
+};
 
+let state = load(),
+  active = document.body.dataset.page || "overview";
+if (document.body.dataset.role) state.role = document.body.dataset.role;
+const roles = {
+  student: {
+    label: "Student",
+    name: "Jordan M.",
+    initials: "JM",
+    nav: [
+      [
+        "OVERVIEW",
+        [
+          "overview:▦:Overview",
+          "learning:▤:My learning",
+          "applications:✦:My applications",
+          "documents:▧:Documents",
+          "messages:✉:Messages",
+          "appointments:◷:Appointments",
+          "payments:K:Payments",
+        ],
+      ],
+      ["ACCOUNT", ["profile:○:My profile"]],
+    ],
+  },
 
+  tutor: {
+    label: "Tutor",
+    name: "Peter T.",
+    initials: "PT",
+    nav: [
+      [
+        "TEACHING",
+        [
+          "overview:▦:Overview",
+          "schedule:◷:My schedule",
+          "groups:▤:My groups",
+          "attendance:✓:Attendance",
+          "resources:▧:Resources",
+          "messages:✉:Messages",
+        ],
+      ],
+      ["ACCOUNT", ["profile:○:My profile"]],
+    ],
+  },
 
-function openModal(title,description){if(title==='Sign in')openSignIn();else openEnquiry()}
+  consultant: {
+    label: "Consultant",
+    name: "Grace K.",
+    initials: "GK",
+    nav: [
+      [
+        "CASEWORK",
+        [
+          "overview:▦:Overview",
+          "cases:✦:Case pipeline",
+          "appointments:◷:Appointments",
+          "documents:▧:Documents",
+          "messages:✉:Messages",
+          "tasks:✓:My tasks",
+        ],
+      ],
+      ["ACCOUNT", ["profile:○:My profile"]],
+    ],
+  },
 
+  admin: {
+    label: "Administrator",
+    name: "Admin User",
+    initials: "AD",
+    nav: [
+      [
+        "MANAGEMENT",
+        [
+          "overview:▦:Overview",
+          "people:♙:People",
+          "programs:▤:Services",
+          "groups:◉:Tutorial groups",
+          "cases:✦:All cases",
+          "payments:K:Payments",
+          "reports:▥:Reports",
+          "settings:⚙:Settings",
+        ],
+      ],
+    ],
+  },
+};
 
+function load() {
+  try {
+    return {
+      ...structuredClone(seed),
+      ...JSON.parse(localStorage.getItem(key) || "{}"),
+    };
+  } catch {
+    return structuredClone(seed);
+  }
+}
+
+function save() {
+  localStorage.setItem(key, JSON.stringify(state));
+}
+
+function esc(s = "") {
+  return String(s).replace(
+    /[&<>"']/g,
+    (c) =>
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[
+        c
+      ],
+  );
+}
+
+function showPublic() {
+  location.href = document.body.dataset.role
+    ? "../../index.html"
+    : "index.html";
+}
+
+function enterApp(role = state.role) {
+  state.role = role;
+  save();
+  location.href = "portal/" + role + "/overview.html";
+}
+
+function changeRole(r) {
+  state.role = r;
+  save();
+  location.href = "../" + r + "/overview.html";
+}
+
+function shell() {
+  let r = roles[state.role];
+  document.getElementById("roleSelect").value = state.role;
+  document.getElementById("currentRole").textContent = r.label;
+  document.getElementById("sideName").textContent = r.name;
+  document.getElementById("sideRole").textContent = r.label + " account";
+  document.getElementById("sideAvatar").textContent = r.initials;
+  document.getElementById("sideNav").innerHTML = r.nav
+    .map(
+      (g) =>
+        `<div class="navsection">${g[0]}</div>` +
+        g[1]
+          .map((x) => {
+            let [id, ic, n] = x.split(":");
+            return `<button class="navitem ${active === id ? "active" : ""}" onclick="go('${id}')"><span>${ic}</span>${n}</button>`;
+          })
+          .join(""),
+    )
+    .join("");
+  document.getElementById("quickLabel").textContent = {
+    student: "Request support",
+    tutor: "Record attendance",
+    consultant: "Add case note",
+    admin: "Add person",
+  }[state.role];
+}
+
+function go(p) {
+  location.href = p + ".html";
+}
+function toggleSidebar() {
+  const isOpen = document.querySelector(".sidebar").classList.toggle("open");
+  document
+    .querySelector(".mobile-nav")
+    ?.setAttribute("aria-expanded", String(isOpen));
+}
+function notify(s) {
+  let t = document.getElementById("toast");
+  t.textContent = s;
+  t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 2500);
+}
+function head(t, d, b = "") {
+  return `<div class="pagehead"><div><h1>${t}</h1><p>${d}</p></div>${b ? `<div class="page-actions">${b}</div>` : ""}</div>`;
+}
+function button(t, fn, cls = "primary") {
+  return `<button class="btn ${cls}" onclick="${fn}">${t}</button>`;
+}
+function stat(a, b, c, i = "•") {
+  return `<article class="stat"><div class="stat-head">${a}<span class="stat-icon">${i}</span></div><div class="stat-num">${b}</div><div class="stat-note">${c}</div></article>`;
+}
+function panel(t, b, link = "") {
+  return `<article class="panel"><div class="panel-head"><h2>${t}</h2>${link}</div>${b}</article>`;
+}
+function badge(s) {
+  let c = /needed|awaiting|pending|new|overdue|unassigned/i.test(s)
+    ? "gold"
+    : /online|review/i.test(s)
+      ? "blue"
+      : /completed|received|paid|active|upcoming|in progress/i.test(s)
+        ? ""
+        : "gray";
+  return `<span class="badge ${c}">${esc(s)}</span>`;
+}
+function table(h, rs) {
+  return `<div class="tablewrap"><table class="data-table"><thead><tr>${h.map((x) => `<th>${x}</th>`).join("")}</tr></thead><tbody>${rs || '<tr><td colspan="8"><div class="empty">Nothing to show yet.</div></td></tr>'}</tbody></table></div>`;
+}
+function row(n, s, b = "") {
+  return `<div class="row"><div class="rowcopy"><b>${esc(n)}</b><small>${esc(s)}</small></div>${b ? badge(b) : ""}</div>`;
+}
+function render() {
+  let meta = {
+    overview: ["Your overview", "Here is what needs your attention today."],
+    learning: ["My learning", "Your groups, schedule, and learning resources."],
+    applications: [
+      "My applications",
+      "Track your consultancy cases and next steps.",
+    ],
+    documents: ["Documents", "Check required documents and review statuses."],
+    messages: ["Messages", "Keep in touch with your support team."],
+    appointments: [
+      "Appointments",
+      "Manage upcoming consultations and meetings.",
+    ],
+    payments: ["Payments", "View invoices and payment history."],
+    profile: ["My profile", "Manage your contact details and preferences."],
+    schedule: ["My schedule", "Review your teaching sessions."],
+    groups: ["My groups", "Students and groups assigned to you."],
+    attendance: ["Attendance", "Record student attendance."],
+    resources: ["Resources", "Learning materials shared with groups."],
+    cases: ["Case pipeline", "Manage student consultancy cases."],
+    tasks: ["My tasks", "Track follow-ups and casework."],
+    people: ["People", "Manage student and staff accounts."],
+    programs: ["Services", "Manage available services."],
+    reports: ["Reports", "View system activity."],
+    settings: ["System settings", "Configure organization defaults."],
+  }[active] || ["Overview", ""];
+  let b = {
+    student: {
+      applications: ["+ New enquiry", "openEnquiry()"],
+      documents: ["↑ Add document", "addDocument()"],
+      appointments: ["+ Book appointment", "bookAppointment()"],
+      messages: ["+ New message", "newMessage()"],
+      learning: ["+ Ask about a class", "openEnquiry('Academy')"],
+    },
+    tutor: {
+      schedule: ["+ Add session", "addSession()"],
+      attendance: ["✓ Record attendance", "saveAttendance()"],
+      resources: ["+ Add resource", "addResource()"],
+    },
+    consultant: {
+      cases: ["+ New case", "addCase()"],
+      appointments: ["+ Book appointment", "bookAppointment()"],
+      tasks: ["+ Add task", "addTask()"],
+      messages: ["+ New message", "newMessage()"],
+    },
+    admin: {
+      people: ["+ Add person", "addPerson()"],
+      programs: ["+ Add service", "addProgram()"],
+      groups: ["+ Create group", "addSession()"],
+      cases: ["+ New case", "addCase()"],
+      payments: ["+ Record payment", "recordPayment()"],
+    },
+  }[state.role]?.[active];
+  document.getElementById("screen").innerHTML =
+    head(meta[0], meta[1], b ? button(...b) : "") + content();
+}
+function content() {
+  return state.role === "student"
+    ? student()
+    : state.role === "tutor"
+      ? tutor()
+      : state.role === "consultant"
+        ? consultant()
+        : admin();
+}
+function student() {
+  if (active === "overview")
+    return `<div class="stats">${stat("Upcoming sessions", state.sessions.length, "On your schedule", "▤")}${stat("Application progress", "65%", "3 of 5 steps complete", "✦")}${stat("Documents needed", state.documents.filter((x) => x.status === "Needed").length, "Check your list", "▧")}${stat("Unread messages", state.messages.filter((x) => x.fresh).length, "From your team", "✉")}</div><div class="dashboard-grid"><div>${
+      panel(
+        "Upcoming learning sessions",
+        state.sessions
+          .slice(0, 3)
+          .map(
+            (s) =>
+              `<div class="row"><div class="datebox">${esc(s.date.split(" ")[0])}<small>${esc(s.date.split(" ")[1] || "DATE")}</small></div><div class="rowcopy"><b>${esc(s.title)}</b><small>${esc(s.date)} · ${esc(s.time)} · ${esc(s.group)}</small></div>${badge(s.mode)}</div>`,
+          )
+          .join(""),
+        '<button class="linkbtn" onclick="go(\'learning\')">Full schedule →</button>',
+      ) +
+      panel(
+        "Consultancy case",
+        state.cases
+          .slice(0, 1)
+          .map(
+            (c) =>
+              `<div class="row"><div class="rowcopy"><b>${esc(c.service)} · ${esc(c.intake)}</b><small>Assigned to ${esc(c.owner)} · ${esc(c.updated)}</small><div class="progress"><span style="width:${c.progress}%"></span></div></div>${badge(c.status)}</div>`,
+          )
+          .join(""),
+        '<button class="linkbtn" onclick="go(\'applications\')">Open case →</button>',
+      )
+    }</div><div>${panel(
+      "Your next steps",
+      state.tasks
+        .filter((x) => !x.done)
+        .map(
+          (x) =>
+            `<div class="taskrow"><span class="taskcheck"></span><span>${esc(x.text)}</span><small>${esc(x.due)}</small></div>`,
+        )
+        .join("") || '<div class="empty">All caught up.</div>',
+    )}<div class="notice">ⓘ <div><b>Reminder</b>Your academic transcript is still needed for your application checklist.</div></div></div></div>`;
+  if (active === "learning")
+    return `<div class="dashboard-grid"><div>${panel("My tutorial groups", row("Mathematics · Group B", "Peter · Tue 14:00–15:30", "Active") + row("Academic writing", "Ruth · Thu 10:00 · Online", "Active"))}${panel("Learning resources", resource("Algebra revision notes", "PDF · Added 12 Oct") + resource("Essay planning guide", "PDF · Added 05 Oct"))}</div><div>${panel("This week", state.sessions.map((s) => row(s.title, `${s.date} · ${s.time} · ${s.group}`)).join(""))}${panel("Need another subject?", `<p class="panel-sub">Tell us what you want to learn.</p>${button("Ask about a class", "openEnquiry('Academy')")}`)}</div></div>`;
+  if (active === "applications")
+    return `<div class="dashboard-grid"><div>${panel(
+      "My cases",
+      table(
+        ["CASE", "SERVICE", "DESTINATION", "STATUS", "PROGRESS"],
+        state.cases
+          .filter((c) => c.student === "Jordan M.")
+          .map(
+            (c) =>
+              `<tr><td><b>${esc(c.id)}</b><br>${esc(c.intake)}</td><td>${esc(c.service)}</td><td>${esc(c.destination)}</td><td>${badge(c.status)}</td><td>${c.progress}%<div class="progress"><span style="width:${c.progress}%"></span></div></td></tr>`,
+          ),
+      ),
+    )}</div><div>${panel("Application steps", `<div class="timeline"><div class="timeline-step">Initial consultation<small>Completed · 03 Oct</small></div><div class="timeline-step">Document checklist<small>In progress</small></div><div class="timeline-step">Prepare application<small>Next step</small></div><div class="timeline-step">Submission and follow-up<small>Not started</small></div></div>`)}<div class="notice">ⓘ <div><b>Decision stays with the institution or authority</b>Edu Connect helps organize and prepare applications; it cannot guarantee admission or permit approval.</div></div></div></div>`;
+  if (active === "documents")
+    return panel(
+      "Document checklist",
+      `<p class="panel-sub">Only share documents requested for your case.</p>${table(
+        ["DOCUMENT", "STATUS", "LAST UPDATED", "ACTION"],
+        state.documents.map(
+          (d, i) =>
+            `<tr><td>${esc(d.name)}</td><td>${badge(d.status)}</td><td>${esc(d.date)}</td><td>${d.status === "Needed" ? `<button class="smallbtn" onclick="addDocument(${i})">Add details</button>` : "—"}</td></tr>`,
+        ),
+      )}`,
+    );
+  if (active === "messages") return messages();
+  if (active === "appointments")
+    return panel(
+      "Appointments",
+      row("Study planning consultation", "Grace · 22 Oct · 11:00", "Upcoming") +
+        row("Academy progress check-in", "Peter · 29 Oct · 14:30", "Upcoming"),
+    );
+  if (active === "payments")
+    return panel(
+      "Payment history",
+      table(
+        ["REFERENCE", "ITEM", "AMOUNT", "DATE", "STATUS"],
+        state.payments
+          .filter((p) => p.student === "Jordan M.")
+          .map(
+            (p) =>
+              `<tr><td>${esc(p.ref)}</td><td>${esc(p.item)}</td><td>${esc(p.amount)}</td><td>${esc(p.date)}</td><td>${badge(p.status)}</td></tr>`,
+          ),
+      ),
+    );
+  return profile();
+}
+function tutor() {
+  if (active === "overview")
+    return `<div class="stats">${stat("Sessions this week", "5", "Across 2 groups", "▤")}${stat("Students", "18", "In assigned groups", "♙")}${stat("Attendance to record", "2", "Recent sessions", "✓")}${stat("Resources shared", "8", "Available to students", "▧")}</div><div class="dashboard-grid"><div>${panel("Today and upcoming", state.sessions.map((s) => row(s.title, `${s.date} · ${s.time} · ${s.group}`, s.status)).join(""))}${panel("Groups needing follow-up", row("Mathematics · Group B", "2 students missed last session", "Follow up"))}</div><div>${panel("Quick actions", button("Record attendance", "go('attendance')", "light") + "<br><br>" + button("Add learning resource", "addResource()", "light"))}${panel("Teaching reminders", '<div class="taskrow">□ <span>Upload weekly practice sheet</span><small>Today</small></div>')}</div></div>`;
+  if (active === "schedule")
+    return panel(
+      "Teaching schedule",
+      state.sessions
+        .map((s) =>
+          row(
+            s.title,
+            `${s.group} · ${s.date} · ${s.time} · ${s.mode}`,
+            s.status,
+          ),
+        )
+        .join(""),
+    );
+  if (active === "groups")
+    return `<div class="dashboard-grid">${panel("Mathematics · Group B", `<p class="panel-sub">Tuesday · 14:00 · 9 students · Peter T.</p>${table(["STUDENT", "ATTENDANCE", "PROGRESS"], ["Jordan M.", "Amina P.", "Tapiwa C.", "Leya S."].map((x, i) => `<tr><td>${x}</td><td>${badge(i === 2 ? "Follow up" : "Good")}</td><td>${i === 2 ? "Needs check-in" : "On track"}</td></tr>`).join(""))}`)}${panel("Academic writing · Online", `<p class="panel-sub">Thursday · 10:00 · 9 students</p>${button("View group", "notify('Group details opened')", "light")}`)}</div>`;
+  if (active === "attendance")
+    return panel(
+      "Record attendance",
+      `<div class="field"><label>Session</label><select id="attendanceSession">${state.sessions.map((s, i) => `<option>${esc(s.title)} · ${esc(s.date)} · ${esc(s.group)}</option>`).join("")}</select></div><div class="checklist">${["Jordan M.", "Amina P.", "Tapiwa C.", "Leya S."].map((n) => `<label class="check-item"><input type="checkbox" checked><span>${n}</span><small>Present</small></label>`).join("")}</div><div style="margin-top:15px">${button("Save attendance", "saveAttendance()")}</div>`,
+    );
+  if (active === "resources")
+    return panel(
+      "Learning resources",
+      resource("Algebra revision notes", "Mathematics · PDF · 12 Oct") +
+        resource("Essay planning guide", "Academic writing · PDF · 05 Oct") +
+        resource("Functions practice set", "Mathematics · PDF · 01 Oct"),
+    );
+  if (active === "messages") return messages();
+  return profile();
+}
+function consultant() {
+  if (active === "overview")
+    return `<div class="stats">${stat("Active cases", state.cases.length, "Across your queue", "✦")}${stat("Waiting on student", state.cases.filter((c) => /document|student/i.test(c.status)).length, "Documents or details", "▧")}${stat("Appointments today", "2", "Next at 11:00", "◷")}${stat("Follow-ups due", state.tasks.filter((t) => !t.done).length, "Needs action", "✓")}</div><div class="dashboard-grid"><div>${panel("Case pipeline", caseTable())}${panel("Upcoming appointments", row("Jordan M. · Study planning", "Today · 11:00 · In person", "Upcoming") + row("Amina P. · Document review", "Today · 14:30 · Online", "Upcoming"))}</div><div>${panel(
+      "My follow-ups",
+      state.tasks
+        .filter((t) => !t.done)
+        .map(
+          (t) =>
+            `<div class="taskrow"><span class="taskcheck"></span><span>${esc(t.text)}</span><small>${esc(t.due)}</small></div>`,
+        )
+        .join("") || '<div class="empty">No open follow-ups.</div>',
+    )}<div class="notice">ⓘ <div><b>Protect student documents</b>Only request and view information needed for the active case.</div></div></div></div>`;
+  if (active === "cases")
+    return panel(
+      "Case pipeline",
+      `<div class="searchrow"><input placeholder="Search cases or students" oninput="filterRows(this,'caseRow')"><select onchange="filterStatus(this,'caseRow')"><option value="">All statuses</option>${["New enquiry", "In progress", "Documents needed", "Awaiting student", "Submitted", "Awaiting decision", "Completed"].map((x) => `<option>${x}</option>`)}</select></div>${caseTable()}`,
+    );
+  if (active === "appointments")
+    return panel(
+      "Appointments",
+      row(
+        "Jordan M. · Study planning",
+        "Today · 11:00 · In person",
+        "Upcoming",
+      ) +
+        row(
+          "Amina P. · Document review",
+          "Today · 14:30 · Online",
+          "Upcoming",
+        ) +
+        row(
+          "Tapiwa C. · Permit preparation",
+          "22 Oct · 09:00 · Online",
+          "Upcoming",
+        ),
+    );
+  if (active === "documents")
+    return panel(
+      "Student document review",
+      table(
+        ["STUDENT", "DOCUMENT", "STATUS", "RECEIVED", "ACTION"],
+        state.documents.map(
+          (d) =>
+            `<tr><td>Jordan M.</td><td>${esc(d.name)}</td><td>${badge(d.status)}</td><td>${esc(d.date)}</td><td><button class="smallbtn" onclick="notify('Connect secure document storage to review files.')">Review</button></td></tr>`,
+        ),
+      ),
+    );
+  if (active === "messages") return messages();
+  if (active === "tasks")
+    return panel(
+      "Follow-up tasks",
+      state.tasks
+        .map(
+          (t, i) =>
+            `<div class="taskrow"><input type="checkbox" ${t.done ? "checked" : ""} onchange="toggleTask(${i},this.checked)"><span>${esc(t.text)}</span><small>${esc(t.due)}</small></div>`,
+        )
+        .join("") || '<div class="empty">No tasks yet.</div>',
+    );
+  return profile();
+}
+function admin() {
+  if (active === "overview")
+    return `<div class="stats">${stat("Students", "124", "Active accounts", "♙")}${stat("Tutorial groups", "12", "Active subjects", "▤")}${stat("Open consultancy cases", state.cases.length, "In pipeline", "✦")}${stat("Outstanding payments", "K 2,400", "Demo receivables", "K")}</div><div class="dashboard-grid"><div>${panel("Recent consultancy activity", caseTable())}${panel("Services", state.programs.map((p) => row(p.name, `${p.category} · ${p.groups} groups`, p.status)).join(""))}</div><div>${panel("Quick management", button("Add a person", "addPerson()", "light") + "<br><br>" + button("Create tutorial session", "addSession()", "light") + "<br><br>" + button("Start consultancy case", "addCase()", "light"))}${panel("System activity", row("New enquiry received", "Today · 09:42", "New") + row("Payment recorded", "Yesterday · 16:20", "Completed"))}</div></div>`;
+  if (active === "people")
+    return panel(
+      "People directory",
+      `<div class="searchrow"><input placeholder="Search name, email, role" oninput="filterRows(this,'peopleRow')"><select onchange="filterStatus(this,'peopleRow')"><option value="">All roles</option><option>Student</option><option>Tutor</option><option>Consultant</option><option>Administrator</option></select></div>${table(
+        ["NAME", "EMAIL", "ROLE", "STATUS", "ACTION"],
+        state.people.map(
+          (p) =>
+            `<tr class="peopleRow"><td><b>${esc(p.name)}</b></td><td>${esc(p.email)}</td><td>${esc(p.role)}</td><td>${badge(p.status)}</td><td><button class="smallbtn" onclick="notify('Authentication actions need a connected account system.')">Manage</button></td></tr>`,
+        ),
+      )}`,
+    );
+  if (active === "programs")
+    return panel(
+      "Service catalogue",
+      table(
+        ["SERVICE", "AREA", "GROUPS", "STATUS", "ACTION"],
+        state.programs.map(
+          (p) =>
+            `<tr><td><b>${esc(p.name)}</b></td><td>${esc(p.category)}</td><td>${p.groups}</td><td>${badge(p.status)}</td><td><button class="smallbtn" onclick="notify('Service editor opened in demo.')">Edit</button></td></tr>`,
+        ),
+      ),
+    );
+  if (active === "groups")
+    return panel(
+      "Tutorial groups",
+      table(
+        ["GROUP / SUBJECT", "TUTOR", "SCHEDULE", "STUDENTS", "STATUS"],
+        state.sessions.map(
+          (s) =>
+            `<tr><td><b>${esc(s.group)}</b><br>${esc(s.title)}</td><td>${esc(s.tutor)}</td><td>${esc(s.date)} · ${esc(s.time)}</td><td>9</td><td>${badge(s.status)}</td></tr>`,
+        ),
+      ),
+    );
+  if (active === "cases") return panel("All consultancy cases", caseTable());
+  if (active === "payments")
+    return panel(
+      "Payments and invoices",
+      table(
+        ["REFERENCE", "STUDENT", "ITEM", "AMOUNT", "DATE", "STATUS"],
+        state.payments.map(
+          (p, i) =>
+            `<tr><td>${esc(p.ref)}</td><td>${esc(p.student)}</td><td>${esc(p.item)}</td><td>${esc(p.amount)}</td><td>${esc(p.date)}</td><td>${badge(p.status)} ${p.status === "Pending" ? `<button class="smallbtn" onclick="markPaid(${i})">Mark paid</button>` : ""}</td></tr>`,
+        ),
+      ),
+    );
+  if (active === "reports")
+    return `<div class="stats">${stat("Active students", "124", "All programs", "♙")}${stat("Tutorial attendance", "86%", "Current month", "✓")}${stat("Cases completed", "38", "This term", "✦")}${stat("Enquiry conversion", "42%", "This term", "↗")}</div>${panel(
+      "Service performance",
+      table(
+        ["SERVICE", "GROUPS", "STATUS"],
+        state.programs.map(
+          (p) =>
+            `<tr><td>${esc(p.name)}</td><td>${p.groups || "—"}</td><td>${badge(p.status)}</td></tr>`,
+        ),
+      ),
+    )}`;
+  if (active === "settings")
+    return panel(
+      "General settings",
+      `<div class="formgrid"><div class="field"><label>Organization</label><input value="Edu Connect"></div><div class="field"><label>Contact email</label><input value="hello@educonnect.example"></div><div class="field"><label>Currency</label><select><option>ZMW · Zambian Kwacha</option><option>USD</option></select></div><div class="field"><label>Time zone</label><select><option>Africa/Lusaka</option></select></div></div>${button("Save settings", "notify('Settings saved in this demo.')")}`,
+    );
+  return profile();
+}
+function caseTable() {
+  return table(
+    ["CASE", "STUDENT", "SERVICE", "DESTINATION", "STATUS", "OWNER", "ACTION"],
+    state.cases.map(
+      (c) =>
+        `<tr class="caseRow"><td><b>${esc(c.id)}</b><br>${esc(c.intake)}</td><td>${esc(c.student)}</td><td>${esc(c.service)}</td><td>${esc(c.destination)}</td><td>${badge(c.status)}</td><td>${esc(c.owner)}</td><td><button class="smallbtn" onclick="updateCase('${esc(c.id)}')">Update</button></td></tr>`,
+    ),
+  );
+}
+function resource(n, s) {
+  return `<div class="resource"><div class="resource-icon">▧</div><div><b>${esc(n)}</b><small>${esc(s)}</small></div><button class="smallbtn" onclick="notify('Connect file storage to open resources.')">Open</button></div>`;
+}
+function messages() {
+  return panel(
+    "Messages",
+    state.messages
+      .map(
+        (m) =>
+          `<div class="message"><div class="avatar">${esc(
+            m.from
+              .split(" ")
+              .map((x) => x[0])
+              .slice(0, 2)
+              .join(""),
+          )}</div><div class="rowcopy"><b>${esc(m.from)} ${m.fresh ? badge("New") : ""}</b><p>${esc(m.text)}</p><small>${esc(m.date)}</small></div></div>`,
+      )
+      .join("") + button("New message", "newMessage()", "light"),
+  );
+}
+function profile() {
+  return (
+    panel(
+      "Contact information",
+      `<div class="formgrid"><div class="field"><label>Full name</label><input value="${esc(roles[state.role].name)}"></div><div class="field"><label>Email</label><input value="${esc(roles[state.role].name.toLowerCase().replaceAll(" ", "."))}@example.com"></div><div class="field"><label>Phone</label><input placeholder="Add phone number"></div><div class="field"><label>Preferred contact method</label><select><option>Email</option><option>Phone</option><option>WhatsApp</option></select></div></div>${button("Save profile", "notify('Profile changes saved in demo.')")}`,
+    ) +
+    panel(
+      "Notifications",
+      `<label class="check-item"><input type="checkbox" checked><span>Email me about appointments and case updates</span></label><label class="check-item"><input type="checkbox" checked><span>Remind me about upcoming sessions</span></label>`,
+    )
+  );
+}
+function modal(title, fields, submit = "Save", type = "generic", id = "") {
+  document.getElementById("modalHost").innerHTML =
+    `<div class="modalback" onclick="if(event.target===this)closeModal()"><form class="modal" data-form="${type}" data-id="${esc(id)}" onsubmit="handleForm(event)"><div class="modalhead"><div><h2>${esc(title)}</h2><p>Complete the fields below.</p></div><button type="button" class="close" onclick="closeModal()">×</button></div>${fields}<div class="modal-foot"><button type="button" class="btn light" onclick="closeModal()">Cancel</button><button class="btn primary" type="submit">${submit} →</button></div></form></div>`;
+}
+function closeModal() {
+  document.getElementById("modalHost").innerHTML = "";
+}
+function openSignIn() {
+  modal(
+    "Welcome to Edu Connect",
+    `<p>Choose a demo workspace to preview the frontend.</p><div class="field"><label>Workspace</label><select id="loginRole"><option value="student">Student</option><option value="tutor">Tutor</option><option value="consultant">Consultant</option><option value="admin">Administrator</option></select></div><div class="field"><label>Email</label><input type="email" required placeholder="name@example.com"></div><div class="field"><label>Password</label><input type="password" required placeholder="Enter password"></div>`,
+    "Sign in",
+    "login",
+  );
+}
+function openEnquiry(s = "") {
+  modal(
+    s ? "Request " + s + " support" : "Get started",
+    `<div class="field"><label>Full name</label><input name="name" required></div><div class="formgrid"><div class="field"><label>Email</label><input type="email" name="email" required></div><div class="field"><label>Phone / WhatsApp</label><input name="phone"></div></div><div class="formgrid"><div class="field"><label>Service</label><select name="service"><option ${s === "Academy" ? "selected" : ""}>Academy</option><option ${s === "Consultancy" ? "selected" : ""}>Consultancy</option><option ${!s ? "selected" : ""}>Not sure yet</option></select></div><div class="field"><label>Preferred contact</label><select name="contact"><option>Email</option><option>Phone</option><option>WhatsApp</option></select></div></div><div class="field"><label>What support do you need?</label><textarea name="details" rows="3"></textarea></div>`,
+    "Send enquiry",
+    "enquiry",
+  );
+}
+function addCase() {
+  modal(
+    "Create consultancy case",
+    `<div class="formgrid"><div class="field"><label>Student name</label><input name="student" required value="${state.role === "student" ? "Jordan M." : ""}"></div><div class="field"><label>Service type</label><select name="service"><option>University application</option><option>Permit preparation</option><option>Study planning consultation</option></select></div><div class="field"><label>Destination</label><input name="destination" required></div><div class="field"><label>Intake / target date</label><input name="intake" placeholder="2027 intake"></div></div><div class="field"><label>Assigned consultant</label><input name="owner" value="${state.role === "consultant" ? roles.consultant.name : ""}"></div><div class="field"><label>Notes</label><textarea name="notes"></textarea></div>`,
+    "Create case",
+    "case",
+  );
+}
+function addTask() {
+  modal(
+    "Add follow-up task",
+    `<div class="field"><label>Task</label><input name="text" required></div><div class="field"><label>Due date</label><input name="due" type="date"></div>`,
+    "Add task",
+    "task",
+  );
+}
+function addSession() {
+  modal(
+    "Add tutorial session",
+    `<div class="field"><label>Session title</label><input name="title" required></div><div class="formgrid"><div class="field"><label>Group</label><input name="group"></div><div class="field"><label>Tutor</label><input name="tutor" value="${state.role === "tutor" ? roles.tutor.name : ""}"></div><div class="field"><label>Date</label><input type="date" name="date" required></div><div class="field"><label>Time</label><input name="time" placeholder="14:00–15:30"></div></div><div class="field"><label>Delivery</label><select name="mode"><option>In person</option><option>Online</option></select></div>`,
+    "Add session",
+    "session",
+  );
+}
+function addPerson() {
+  modal(
+    "Add a person",
+    `<div class="field"><label>Full name</label><input name="name" required></div><div class="field"><label>Email</label><input type="email" name="email" required></div><div class="field"><label>Role</label><select name="role"><option>Student</option><option>Tutor</option><option>Consultant</option><option>Administrator</option></select></div>`,
+    "Add person",
+    "person",
+  );
+}
+function addDocument() {
+  modal(
+    "Add document details",
+    `<div class="field"><label>Document name</label><input name="name" required placeholder="Academic transcript"></div><div class="field"><label>Select file (demo only)</label><input type="file" accept=".pdf,.jpg,.jpeg,.png"></div><p class="panel-sub">This demo records the document name only. Secure upload needs backend storage.</p>`,
+    "Save document",
+    "document",
+  );
+}
+function newMessage() {
+  modal(
+    "New message",
+    `<div class="field"><label>Message</label><textarea name="text" required rows="5"></textarea></div>`,
+    "Send message",
+    "message",
+  );
+}
+function bookAppointment() {
+  modal(
+    "Request an appointment",
+    `<div class="field"><label>Appointment type</label><select name="type"><option>University application consultation</option><option>Permit guidance</option><option>Academy progress check-in</option></select></div><div class="formgrid"><div class="field"><label>Preferred date</label><input type="date" name="date" required></div><div class="field"><label>Preferred time</label><input type="time" name="time" required></div></div><div class="field"><label>Meeting format</label><select name="mode"><option>In person</option><option>Online</option></select></div>`,
+    "Request appointment",
+  );
+}
+function addResource() {
+  modal(
+    "Add learning resource",
+    `<div class="field"><label>Resource title</label><input required></div><div class="field"><label>Attach file (demo only)</label><input type="file" accept=".pdf,.doc,.docx"></div><p class="panel-sub">Connect secure file storage to share actual files.</p>`,
+    "Save resource",
+  );
+}
+function addProgram() {
+  modal(
+    "Add service",
+    `<div class="field"><label>Service name</label><input required></div><div class="field"><label>Service area</label><select><option>Academy</option><option>Consultancy</option></select></div>`,
+    "Save service",
+  );
+}
+function recordPayment() {
+  modal(
+    "Record payment",
+    `<div class="field"><label>Student</label><input required></div><div class="formgrid"><div class="field"><label>Amount</label><input required placeholder="K 0"></div><div class="field"><label>Invoice reference</label><input></div></div><div class="field"><label>Item</label><input></div>`,
+    "Record payment",
+  );
+}
+function updateCase(id) {
+  let c = state.cases.find((x) => x.id === id);
+  if (!c) return;
+  modal(
+    "Update case · " + id,
+    `<div class="field"><label>Status</label><select name="status">${["New enquiry", "In progress", "Documents needed", "Awaiting student", "Submitted", "Awaiting decision", "Completed", "On hold"].map((x) => `<option ${c.status === x ? "selected" : ""}>${x}</option>`).join("")}</select></div><div class="field"><label>Assigned to</label><input name="owner" value="${esc(c.owner)}"></div><div class="field"><label>Progress %</label><input type="number" min="0" max="100" name="progress" value="${c.progress}"></div>`,
+    "Save update",
+    "updatecase",
+    id,
+  );
+}
+function handleForm(e) {
+  e.preventDefault();
+  let f = e.currentTarget,
+    v = Object.fromEntries(new FormData(f)),
+    type = f.dataset.form;
+  if (type === "login") {
+    let selected = document.getElementById("loginRole").value;
+    closeModal();
+    enterApp(selected);
+    return;
+  }
+  if (type === "enquiry")
+    state.enquiries.unshift({
+      ...v,
+      status: "New",
+      date: new Date().toLocaleDateString(),
+    });
+  if (type === "case")
+    state.cases.unshift({
+      id: "EC-" + Math.floor(1050 + Math.random() * 900),
+      student: v.student || "Jordan M.",
+      service: v.service,
+      destination: v.destination || "—",
+      intake: v.intake || "—",
+      status: "New enquiry",
+      owner: v.owner || "Unassigned",
+      progress: 10,
+      updated: "Today",
+    });
+  if (type === "task")
+    state.tasks.unshift({
+      text: v.text,
+      done: false,
+      due: v.due || "No due date",
+    });
+  if (type === "session")
+    state.sessions.unshift({
+      title: v.title,
+      group: v.group || "New group",
+      tutor: v.tutor || roles[state.role].name,
+      date: v.date,
+      time: v.time,
+      mode: v.mode,
+      status: "Upcoming",
+    });
+  if (type === "person")
+    state.people.unshift({
+      name: v.name,
+      email: v.email,
+      role: v.role,
+      status: "Invited",
+    });
+  if (type === "document")
+    state.documents.unshift({
+      name: v.name,
+      status: "Submitted for review",
+      date: "Today",
+    });
+  if (type === "message")
+    state.messages.unshift({
+      from: roles[state.role].name + " · " + roles[state.role].label,
+      text: v.text,
+      date: "Just now",
+      fresh: true,
+    });
+  if (type === "updatecase") {
+    let c = state.cases.find((x) => x.id === f.dataset.id);
+    if (c)
+      Object.assign(c, {
+        status: v.status,
+        owner: v.owner,
+        progress: Number(v.progress),
+        updated: "Today",
+      });
+  }
+  save();
+  closeModal();
+  render();
+  notify(
+    type === "enquiry"
+      ? "Thank you. Your enquiry is saved in this demo."
+      : "Saved in this demo.",
+  );
+}
+function quickAction() {
+  if (state.role === "student") openEnquiry();
+  else if (state.role === "tutor") go("attendance");
+  else if (state.role === "consultant") addTask();
+  else addPerson();
+}
+function saveAttendance() {
+  notify(
+    "Attendance saved in this demo. Connect a backend to retain registers.",
+  );
+}
+function markPaid(i) {
+  state.payments[i].status = "Paid";
+  save();
+  render();
+  notify("Payment marked paid in the demo.");
+}
+function toggleTask(i, v) {
+  state.tasks[i].done = v;
+  save();
+  render();
+}
+function filterRows(input, cls) {
+  document
+    .querySelectorAll("." + cls)
+    .forEach(
+      (x) =>
+        (x.style.display = x.textContent
+          .toLowerCase()
+          .includes(input.value.toLowerCase())
+          ? ""
+          : "none"),
+    );
+}
+function filterStatus(sel, cls) {
+  document
+    .querySelectorAll("." + cls)
+    .forEach(
+      (x) =>
+        (x.style.display =
+          !sel.value || x.textContent.includes(sel.value) ? "" : "none"),
+    );
+}
+if (document.body.dataset.role) {
+  active = document.body.dataset.page || "overview";
+  state.role = document.body.dataset.role;
+  save();
+  shell();
+  render();
+}
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") {
+    closeModal();
+    document.querySelector(".sidebar")?.classList.remove("open");
+    document
+      .querySelector(".mobile-nav")
+      ?.setAttribute("aria-expanded", "false");
+  }
+});
+document.addEventListener("click", (e) => {
+  const sidebar = document.querySelector(".sidebar");
+  if (
+    sidebar?.classList.contains("open") &&
+    !sidebar.contains(e.target) &&
+    !e.target.closest(".mobile-nav")
+  ) {
+    sidebar.classList.remove("open");
+    document
+      .querySelector(".mobile-nav")
+      ?.setAttribute("aria-expanded", "false");
+  }
+});
+
+function openModal(title, description) {
+  if (title === "Sign in") openSignIn();
+  else openEnquiry();
+}
